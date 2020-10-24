@@ -42,9 +42,10 @@ class RecordingWorker(Thread):
             start_time = datetime.now()
             generated_contents = self.__record_audio_files(start_time=start_time, time_limit=time_limit)
             for content in generated_contents:
-                self.__persist_file_information(information=content, station=self.__configuration.station)
+                self.__persist_file_information(information=content)
 
     def __record_audio_files(self, start_time: datetime, time_limit: int) -> List[ContentMeta]:
+        generated_content = []
         time_format = "%d-%m-%Y-T-%H:%M:%S"
         prefix = "{}.{}".format(self.__configuration.station, start_time.strftime(time_format))
         filename = "{}.mp3".format(prefix)
@@ -61,7 +62,7 @@ class RecordingWorker(Thread):
             # Get the number of files that match the current file name in this folder
             list_command = "ls -a {}/{}*".format(self.__configuration.folder, prefix)
             result = subprocess.run([sys.executable, list_command], capture_output=True, text=True)
-            generated_content = []
+
             files = result.stdout.split(" ")
             for file in files:
                 absolute_filepath = "{}/{}".format(self.__configuration.folder, file.strip())
@@ -75,9 +76,9 @@ class RecordingWorker(Thread):
                     end_time=time.ctime(end_timestamp),
                     size=size
                 ))
-            return generated_content
+        return generated_content
 
-    def __persist_file_information(self, information: ContentMeta, station: str) -> None:
+    def __persist_file_information(self, information: ContentMeta) -> None:
         # Database connection will be made here
         # Call to persist the contents found in regards to the file in question
         statement: str = "INSERT INTO recording_tb(station_id, name, created_at, finished_at, file_size) " \
@@ -86,5 +87,6 @@ class RecordingWorker(Thread):
         self.__session.execute(statement, params={'station_name': self.__configuration.station,
                                                   'recording_name': information.filename,
                                                   'created_at': information.started_at,
-                                                  'ended_at': information.ended_at}
+                                                  'finished_at': information.ended_at,
+                                                  'file_size': information.size}
                                )
