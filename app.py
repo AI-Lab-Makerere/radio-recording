@@ -18,6 +18,9 @@ def initialize() -> None:
     BaseModel.prepare(engine, reflect=True)  # BaseModel.metadata.create_all(engine)
 
 
-def migrate() -> None:
-    initialize()
+def run() -> None:
+    # We will add the argument parser library for python and determine what command is to be run
+    # record to start off recorder
+    # migrate to migrate sql
+    # clean to wipe out all tables and rollback
     pass
