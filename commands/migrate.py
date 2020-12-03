@@ -7,14 +7,12 @@ class SQLMigrationHandler(object):
         self.__backend = get_backend(database_url)
         self.__migrations = read_migrations(migration_folder)
 
+    def migrate(self) -> None:
+        with self.__backend.lock():
+            # Apply any outstanding migrations
+            self.__backend.apply_migrations(self.__backend.to_apply(self.__migrations))
 
-def migrate(self) -> None:
-    with self.__backend.lock():
-        # Apply any outstanding migrations
-        self.__backend.apply_migrations(self.__backend.to_apply(self.__migrations))
-
-
-def rollback(self) -> None:
-    with self.__backend.lock():
-        # Rollback all migrations
-        self.__backend.rollback_migrations(self.__backend.to_rollback(self.__migrations))
+    def rollback(self) -> None:
+        with self.__backend.lock():
+            # Rollback all migrations
+            self.__backend.rollback_migrations(self.__backend.to_rollback(self.__migrations))
