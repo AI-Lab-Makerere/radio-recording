@@ -3,7 +3,7 @@ from decouple import config
 
 DEBUG = config('DEBUG', cast=bool, default=True)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATABASE_URL = config('DATABASE_URL', default='sqlite://')
+DATABASE_URL = config('DATABASE_URL', default='sqlite:///sample.db')
 OPERATION_TIME_RANGE = config('OPERATION_TIME_RANGE', default='06:00|00:00')
 MIGRATIONS_FOLDER = os.path.join(BASE_DIR, "migrations")
 BUCKET_NAME = config('AWS_BUCKET', default='')

@@ -1,4 +1,4 @@
-CREATE IF NOT EXISTS station_tb (
+CREATE TABLE IF NOT EXISTS station_tb (
     id SERIAL PRIMARY KEY,
     name VARCHAR NOT NULL UNIQUE,
     region VARCHAR NOT NULL,
@@ -8,7 +8,7 @@ CREATE IF NOT EXISTS station_tb (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE IF NOT EXISTS recording_tb (
+CREATE TABLE IF NOT EXISTS recording_tb (
     id SERIAL PRIMARY KEY,
     name VARCHAR NOT NULL UNIQUE,
     station_id BIGINT NOT NULL,
@@ -16,7 +16,7 @@ CREATE IF NOT EXISTS recording_tb (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     finished_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     idx BIGSERIAL NOT NULL UNIQUE,
-    CONSTRAINT fk_station FOREIGN KEY station_id REFERENCES station_id(id)
+    CONSTRAINT fk_station FOREIGN KEY station_id REFERENCES station_tb(id)
 );
 
 CREATE INDEX recording_tb_idx ON recording_tb USING btree(idx);
