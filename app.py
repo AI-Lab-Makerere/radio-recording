@@ -36,11 +36,14 @@ class App(object):
     def list_station(self):
         try:
             stations = self.__session.query(Station).all()
+
             table = texttable.Texttable()
-            headings = ['Name', 'Region', 'Language', 'URL']
+            headings = ['Identifier', 'Name', 'Region', 'Language', 'URL']
             table.header(headings)
             for station in stations:
-                table.add_row([station.name, station.region, station.language, station.uri])
+                if station is None:
+                    return
+                table.add_row([station.id, station.name, station.region, station.language, station.uri])
             s = table.draw()
             print(s)
         except DatabaseError as err:

@@ -1,5 +1,5 @@
 CREATE TABLE station_tb (
-    id INT PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     name VARCHAR NOT NULL UNIQUE,
     region VARCHAR NOT NULL,
     language VARCHAR NOT NULL,
@@ -9,13 +9,13 @@ CREATE TABLE station_tb (
 );
 
 CREATE TABLE recording_tb (
-    id INT PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     name VARCHAR NOT NULL UNIQUE,
-    station_id INT NOT NULL,
-    size INT NOT NULL,
+    station_id INTEGER NOT NULL,
+    file_size INTEGER NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     finished_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    idx INT,
+    idx INTEGER,
     CONSTRAINT fk_station FOREIGN KEY (station_id) REFERENCES station_tb(id)
 );
 CREATE TRIGGER IF NOT EXISTS update_station_recording_idx AFTER INSERT ON recording_tb
