@@ -1,15 +1,47 @@
+from datetime import datetime
+from crontabs import Cron, Tab
 from sqlalchemy.exc import DatabaseError
 from sqlalchemy.orm import Session
 import texttable
 from recording.models import Station
+from settings import RECORDING_HOURS_RANGE, UPLOADING_HOURS_RANGE
 
 
 class App(object):
     def __init__(self, session: Session) -> None:
         self.__session = session
 
+    @staticmethod
+    def __recording_time(timestamp: datetime) -> bool:
+        time_range = str(RECORDING_HOURS_RANGE).split("-")
+        print("CURRENT RECORDING HOUR {}".format(timestamp.hour))
+        return int(time_range[0]) <= timestamp.hour < int(time_range[1])
+
+    @staticmethod
+    def __uploading_time(timestamp: datetime) -> bool:
+        time_range = str(UPLOADING_HOURS_RANGE).split("-")
+        print("CURRENT UPLOADING HOUR {}".format(timestamp.hour))
+        return int(time_range[0]) <= timestamp.hour or timestamp.hour < int(time_range[1])
+
+    def __recording_operation(self) -> None:
+        print("recording your lordship")
+        print(self.__session)
+
+    def __uploading_operation(self) -> None:
+        print("uploading your lordship")
+        print(self.__session)
+
+    def __create_recording_job(self):
+        return Tab(name='recording_job').every(days=1).during(self.__recording_time).run(self.__recording_operation)
+
+    def __create_uploading_job(self):
+        return Tab(name='uploading_job').every(days=1).during(self.__uploading_time).run(self.__uploading_operation)
+
     def run(self):
-        pass
+        Cron().schedule(
+            self.__create_recording_job(),
+            self.__create_uploading_job()
+        ).go(max_seconds=3600 * 24 * 365)
 
     def add_station(self, name, language, region, url):
         try:
