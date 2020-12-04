@@ -1,35 +1,41 @@
+import os
 from datetime import datetime
+from typing import List
+
 from crontabs import Cron, Tab
 from sqlalchemy.exc import DatabaseError
 from sqlalchemy.orm import Session
 import texttable
 from recording.models import Station
-from settings import RECORDING_HOURS_RANGE, UPLOADING_HOURS_RANGE
+from recording.recording_worker import RecordingWorker, RecordingConfiguration
+from settings import RECORDING_HOURS_RANGE, UPLOADING_HOURS_RANGE, RECORDING_FOLDER
 
 
 class App(object):
     def __init__(self, session: Session) -> None:
         self.__session = session
+        self.__is_recording = False
+        self.__is_uploading = False
 
     @staticmethod
     def __recording_time(timestamp: datetime) -> bool:
         time_range = str(RECORDING_HOURS_RANGE).split("-")
-        print("CURRENT RECORDING HOUR {}".format(timestamp.hour))
         return int(time_range[0]) <= timestamp.hour < int(time_range[1])
 
     @staticmethod
     def __uploading_time(timestamp: datetime) -> bool:
         time_range = str(UPLOADING_HOURS_RANGE).split("-")
-        print("CURRENT UPLOADING HOUR {}".format(timestamp.hour))
         return int(time_range[0]) <= timestamp.hour or timestamp.hour < int(time_range[1])
 
     def __recording_operation(self) -> None:
-        print("recording your lordship")
-        print(self.__session)
+        if not self.__is_recording:
+            self.__is_uploading = False
+            self.__start_recording_workers()
 
     def __uploading_operation(self) -> None:
-        print("uploading your lordship")
-        print(self.__session)
+        if not self.__is_uploading:
+            self.__is_recording = False
+            self.__start_uploading_worker()
 
     def __create_recording_job(self):
         return Tab(name='recording_job').every(days=1).during(self.__recording_time).run(self.__recording_operation)
@@ -80,3 +86,26 @@ class App(object):
             print(s)
         except DatabaseError as err:
             print(err)
+
+    def __start_recording_workers(self):
+        workers: List = []
+        for station in self.__session.query(Station).all():
+            folder = os.path.join(RECORDING_FOLDER, station.language, station.name)
+            if not os.path.exists(folder):
+                os.makedirs(folder)
+            configuration = RecordingConfiguration(
+                region=station.region,
+                language=station.language,
+                uri=station.uri,
+                folder=folder
+            )
+            workers.append(RecordingWorker(
+                configuration=configuration,
+                session=self.__session
+            ))
+        for worker in workers:
+            worker.start()
+        self.__is_recording = True
+
+    def __start_uploading_worker(self):
+        pass
